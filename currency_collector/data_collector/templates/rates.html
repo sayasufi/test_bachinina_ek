@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Просмотр курсов валют{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <h1 class="mb-4">Курсы валют</h1>
+        <form>
+            <div class="mb-3">
+                <label for="date" class="form-label">Выберите дату:</label>
+                <input type="date" id="date" name="date" class="form-control" onchange="fetchRates()">
+            </div>
+        </form>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Код валюты</th>
+                    <th scope="col">Значение</th>
+                </tr>
+            </thead>
+            <tbody id="rateTable"></tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    function fetchRates() {
+        const date = document.getElementById('date').value;
+        const url = `/show_rates?date=${date}`;
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('rateTable');
+                table.innerHTML = ''; // Очистить текущие данные
+                if (data.length === 0) {
+                    table.innerHTML = '<tr><td colspan="2">Данные за указанную дату отсутствуют.</td></tr>';
+                } else {
+                    data.forEach(rate => {
+                        const row = `<tr><td>${rate.currency}</td><td>${rate.value}</td></tr>`;
+                        table.innerHTML += row;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const table = document.getElementById('rateTable');
+                table.innerHTML = '<tr><td colspan="2">Ошибка при загрузке данных.</td></tr>';
+            });
+    }
+
+    // Автоматически заполняем дату при загрузке и вызываем fetchRates, если дата указана в URL
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dateParam = urlParams.get('date');
+        if (dateParam) {
+            document.getElementById('date').value = dateParam;
+            fetchRates();
+        }
+    }
+    </script>
+
+{% endblock %}
+
